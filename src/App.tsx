@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import confetti from 'canvas-confetti';
 import {
   getUserSession,
   getUserProfile,
@@ -43,7 +44,12 @@ export function App() {
   // Check URL query parameters for Lemon Squeezy return redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.has('checkout') || params.get('payment') === 'success' || params.has('order_id')) {
+    if (
+      params.has('checkout') ||
+      params.get('payment') === 'success' ||
+      params.get('payment_success') === 'true' ||
+      params.has('order_id')
+    ) {
       let isTrial = false;
       if (!isDeviceTrialAlreadyClaimed()) {
         isTrial = true;
@@ -65,6 +71,16 @@ export function App() {
 
       saveSubscription(activatedSub);
       setSubscription(activatedSub);
+
+      try {
+        confetti({
+          particleCount: 120,
+          spread: 85,
+          origin: { y: 0.6 },
+        });
+      } catch (e) {
+        console.log(e);
+      }
 
       // Clean URL params cleanly
       window.history.replaceState({}, document.title, window.location.pathname);

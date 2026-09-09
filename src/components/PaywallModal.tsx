@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldAlert, Zap, Check, Lock, Sparkles, AlertTriangle, ExternalLink, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, Check, Lock, Sparkles, AlertTriangle, ExternalLink, RefreshCw, Loader2, ShieldCheck } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
   saveSubscription,
@@ -47,12 +47,17 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, 
     // Open real Lemon Squeezy checkout page in new tab/window
     window.open(checkoutUrl, '_blank');
     
-    // Switch to verification step requiring payment completion
+    // Switch to verification step requiring real payment redirect or order #
     setStep('verifying');
   };
 
-  // Step 2: Confirm & Verify Payment Completion
-  const handleVerifyPayment = () => {
+  // Verify manual Order ID if provided by user from Lemon Squeezy receipt
+  const handleVerifyOrderId = () => {
+    if (!orderId.trim()) {
+      setError('Please enter your Lemon Squeezy Order # or Receipt Email to verify.');
+      return;
+    }
+
     setError('');
     setProcessing(true);
 
@@ -91,7 +96,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, 
     setTimeout(() => {
       setProcessing(false);
       onSuccess(newSub);
-    }, 500);
+    }, 600);
   };
 
   const containerClasses = isModal
@@ -251,63 +256,78 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, 
           ) : (
             /* Step 2: Payment Verification Screen */
             <div className="space-y-5">
-              <div className="p-4 bg-zinc-950 border border-lime-500/30 rounded-2xl space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-lime-400 uppercase tracking-wider">
-                  <CheckCircle2 className="w-4 h-4 text-lime-400 animate-pulse" />
-                  <span>Step 1: Complete Card Setup on Lemon Squeezy</span>
+              
+              {/* Waiting Status Animation */}
+              <div className="p-4 sm:p-5 bg-gradient-to-r from-lime-500/10 via-emerald-500/10 to-cyan-500/10 border border-lime-500/30 rounded-2xl space-y-3 text-center">
+                <div className="flex items-center justify-center gap-2 text-xs font-black text-lime-400 uppercase tracking-wider">
+                  <Loader2 className="w-4 h-4 text-lime-400 animate-spin" />
+                  <span>Awaiting Lemon Squeezy Checkout Completion...</span>
                 </div>
+
                 <p className="text-xs text-zinc-300 leading-relaxed">
-                  Lemon Squeezy payment page has been opened in a new tab. Please enter your card details and complete the subscription checkout.
+                  Lemon Squeezy payment page has opened in a new tab. Please enter your Card details and complete the 7-day trial registration.
                 </p>
+
+                <div className="p-3 bg-zinc-950/80 rounded-xl border border-zinc-800 text-[11px] text-zinc-400 text-left space-y-1">
+                  <div className="font-semibold text-lime-400 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Auto-Redirect Verification Active
+                  </div>
+                  <p>
+                    Upon completing checkout on Lemon Squeezy, you will be automatically redirected back here to instantly activate Pro access.
+                  </p>
+                </div>
 
                 <button
                   type="button"
                   onClick={() => window.open(LEMON_SQUEEZY_LINKS[billingCycle], '_blank')}
-                  className="w-full py-2.5 px-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                  className="w-full py-3 px-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-bold text-zinc-200 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
                 >
-                  <RefreshCw className="w-3.5 h-3.5 text-lime-400" />
-                  <span>Re-open Lemon Squeezy Payment Gateway Tab</span>
+                  <RefreshCw className="w-4 h-4 text-lime-400" />
+                  <span>Re-open Lemon Squeezy Gateway Tab</span>
                 </button>
               </div>
 
-              <div className="space-y-2">
+              {/* Optional Manual Receipt/Order # Verification */}
+              <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-2xl space-y-3">
                 <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                  Step 2: Enter Lemon Squeezy Order # or Email (Optional)
+                  Or Enter Lemon Squeezy Order # / Email
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. LS-123456 or your billing email"
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-lime-500"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. LS-123456 or receipt email"
+                    value={orderId}
+                    onChange={(e) => {
+                      setOrderId(e.target.value);
+                      if (e.target.value) setError('');
+                    }}
+                    className="flex-1 px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-lime-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifyOrderId}
+                    disabled={processing}
+                    className="py-2.5 px-4 bg-lime-500 hover:bg-lime-400 text-zinc-950 font-bold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-50 cursor-pointer shrink-0"
+                  >
+                    {processing ? 'Verifying...' : 'Verify'}
+                  </button>
+                </div>
               </div>
 
-              <div className="pt-2 space-y-3">
-                <button
-                  type="button"
-                  onClick={handleVerifyPayment}
-                  disabled={processing}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-lime-400 via-lime-500 to-emerald-400 hover:from-lime-300 hover:to-emerald-300 active:scale-[0.99] text-zinc-950 font-black text-base uppercase tracking-wider rounded-2xl shadow-xl shadow-lime-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {processing ? (
-                    <span className="animate-pulse flex items-center gap-2">
-                      <Zap className="w-5 h-5 animate-bounce" /> Verifying Payment Status...
-                    </span>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
-                      <span>✅ I've Completed Payment — Activate Pro</span>
-                    </>
-                  )}
-                </button>
+              {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-medium flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
 
+              <div className="text-center pt-1">
                 <button
                   type="button"
                   onClick={() => setStep('checkout')}
-                  className="w-full text-center text-xs text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
+                  className="text-xs text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
                 >
-                  Back to Plan Selection
+                  Cancel / Back to Access Tiers
                 </button>
               </div>
             </div>
