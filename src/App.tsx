@@ -3,6 +3,9 @@ import {
   getUserSession,
   getUserProfile,
   getSubscription,
+  saveSubscription,
+  isDeviceTrialAlreadyClaimed,
+  markDeviceTrialClaimed,
   getWorkoutLogs,
   getTodayLog,
   saveDailyLog,
@@ -36,6 +39,37 @@ export function App() {
   const [workoutLogs, setWorkoutLogs] = useState<CompletedWorkoutLog[]>(() => getWorkoutLogs());
   const [todayLog, setTodayLog] = useState<DailyLog>(() => getTodayLog(getUserProfile()));
   const [streak, setStreak] = useState<number>(() => calculateStreak());
+
+  // Check URL query parameters for Lemon Squeezy return redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('checkout') || params.get('payment') === 'success' || params.has('order_id')) {
+      let isTrial = false;
+      if (!isDeviceTrialAlreadyClaimed()) {
+        isTrial = true;
+        markDeviceTrialClaimed(session?.name || 'Athlete');
+      }
+
+      const trialEndDate = new Date();
+      if (isTrial) {
+        trialEndDate.setDate(trialEndDate.getDate() + 7);
+      }
+
+      const activatedSub: SubscriptionState = {
+        plan: 'pro',
+        status: 'active',
+        billingCycle: 'annual',
+        trialEnd: isTrial ? trialEndDate.toISOString() : null,
+        isSubscribed: true,
+      };
+
+      saveSubscription(activatedSub);
+      setSubscription(activatedSub);
+
+      // Clean URL params cleanly
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [session]);
 
   // PWA Install Prompt Listener
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);

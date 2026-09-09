@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldAlert, Zap, Check, Lock, Sparkles, AlertTriangle, ExternalLink } from 'lucide-react';
+import { ShieldAlert, Zap, Check, Lock, Sparkles, AlertTriangle, ExternalLink, RefreshCw, CheckCircle2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
   saveSubscription,
@@ -25,6 +25,8 @@ const LEMON_SQUEEZY_LINKS = {
 export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, isModal = true }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [disclaimerAccepted, setDisclaimerAccepted] = useState<boolean>(false);
+  const [step, setStep] = useState<'checkout' | 'verifying'>('checkout');
+  const [orderId, setOrderId] = useState<string>('');
   const [processing, setProcessing] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
@@ -32,19 +34,28 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, 
   const trialAlreadyClaimedOnDevice = isDeviceTrialAlreadyClaimed();
   const deviceRecord = getDeviceTrialRecord();
 
-  const handleCheckout = () => {
+  // Step 1: Open Lemon Squeezy Gateway
+  const handleOpenGateway = () => {
     if (!disclaimerAccepted) {
       setError('Please acknowledge the medical disclaimer before proceeding.');
       return;
     }
 
     setError('');
-    setProcessing(true);
-
-    // Get selected tier URL
     const checkoutUrl = LEMON_SQUEEZY_LINKS[billingCycle];
 
-    // Local subscription status update
+    // Open real Lemon Squeezy checkout page in new tab/window
+    window.open(checkoutUrl, '_blank');
+    
+    // Switch to verification step requiring payment completion
+    setStep('verifying');
+  };
+
+  // Step 2: Confirm & Verify Payment Completion
+  const handleVerifyPayment = () => {
+    setError('');
+    setProcessing(true);
+
     let isTrial = false;
     if (!trialAlreadyClaimedOnDevice) {
       isTrial = true;
@@ -69,20 +80,18 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, 
     // Trigger celebration confetti
     try {
       confetti({
-        particleCount: 90,
-        spread: 75,
+        particleCount: 100,
+        spread: 80,
         origin: { y: 0.6 },
       });
     } catch (e) {
       console.log(e);
     }
 
-    // Open real Lemon Squeezy checkout page in new tab/window
     setTimeout(() => {
-      window.open(checkoutUrl, '_blank');
       setProcessing(false);
       onSuccess(newSub);
-    }, 600);
+    }, 500);
   };
 
   const containerClasses = isModal
@@ -112,142 +121,200 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, 
 
         <div className="p-6 sm:p-8 space-y-6">
           
-          {/* Trial Anti-Abuse Warning Notice */}
-          {trialAlreadyClaimedOnDevice && (
-            <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-start gap-3 text-xs text-amber-300">
-              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          {step === 'checkout' ? (
+            <>
+              {/* Trial Anti-Abuse Warning Notice */}
+              {trialAlreadyClaimedOnDevice && (
+                <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-start gap-3 text-xs text-amber-300">
+                  <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold text-amber-400 uppercase tracking-wider block mb-0.5">
+                      Device Trial Protection Active
+                    </span>
+                    The 7-Day Free Trial has already been claimed on this browser device
+                    {deviceRecord?.claimedByAccount && (
+                      <span> (by <strong className="text-white">{deviceRecord.claimedByAccount}</strong>)</span>
+                    )}. New account trial bypass is restricted. You can subscribe directly below to reactivate PRO access.
+                  </div>
+                </div>
+              )}
+
+              {/* Features Bullets */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                {[
+                  'Complete US Gym Offline JSON Workouts',
+                  'Auto-calculated TDEE & Macro Split',
+                  'Web Audio Rest Timer Beep Synthesizer',
+                  'Hydration (oz) & Step Counter Log',
+                  '100% Client-Side LocalStorage Encryption',
+                  'Cancel Anytime in 1-Click',
+                ].map((feat, i) => (
+                  <div key={i} className="flex items-center gap-2 text-zinc-300">
+                    <div className="w-5 h-5 rounded-full bg-lime-500/10 border border-lime-500/30 flex items-center justify-center shrink-0">
+                      <Check className="w-3 h-3 text-lime-400" />
+                    </div>
+                    <span>{feat}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tier Selection */}
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                  Select Your Access Tier
+                </label>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Annual Plan */}
+                  <div
+                    onClick={() => setBillingCycle('annual')}
+                    className={`p-4 rounded-2xl border cursor-pointer relative transition-all ${
+                      billingCycle === 'annual'
+                        ? 'bg-lime-500/10 border-lime-500 ring-1 ring-lime-500'
+                        : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
+                    }`}
+                  >
+                    <div className="absolute -top-2.5 right-3 bg-lime-500 text-zinc-950 font-black text-[10px] uppercase px-2 py-0.5 rounded-full shadow">
+                      SAVE 66%
+                    </div>
+                    <div className="text-xs font-bold text-zinc-400 uppercase">Annual Pass</div>
+                    <div className="text-2xl font-black text-white mt-1">
+                      ₹6,999<span className="text-xs text-zinc-400 font-normal">/yr</span>
+                    </div>
+                    <div className="text-[11px] text-lime-400 font-medium mt-1">Just ₹583/month</div>
+                  </div>
+
+                  {/* Monthly Plan */}
+                  <div
+                    onClick={() => setBillingCycle('monthly')}
+                    className={`p-4 rounded-2xl border cursor-pointer relative transition-all ${
+                      billingCycle === 'monthly'
+                        ? 'bg-lime-500/10 border-lime-500 ring-1 ring-lime-500'
+                        : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
+                    }`}
+                  >
+                    <div className="text-xs font-bold text-zinc-400 uppercase">Monthly Pass</div>
+                    <div className="text-2xl font-black text-white mt-1">
+                      ₹1,699<span className="text-xs text-zinc-400 font-normal">/mo</span>
+                    </div>
+                    <div className="text-[11px] text-zinc-400 font-medium mt-1">Flexible billing</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legal / Medical Disclaimer Checkbox */}
+              <div className="p-3.5 bg-zinc-950 border border-zinc-800/80 rounded-xl space-y-2">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={disclaimerAccepted}
+                    onChange={(e) => {
+                      setDisclaimerAccepted(e.target.checked);
+                      if (e.target.checked) setError('');
+                    }}
+                    className="mt-0.5 rounded accent-lime-500 w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-[11px] text-zinc-400 leading-tight">
+                    <span className="font-semibold text-zinc-300">Required Medical Disclaimer:</span> This application provides educational fitness & sports science protocols and is not a substitute for professional medical advice. Always consult a physician before beginning any exercise routine.
+                  </span>
+                </label>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-medium flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Call to Action Button */}
               <div>
-                <span className="font-bold text-amber-400 uppercase tracking-wider block mb-0.5">
-                  Device Trial Protection Active
-                </span>
-                The 7-Day Free Trial has already been claimed on this browser device
-                {deviceRecord?.claimedByAccount && (
-                  <span> (by <strong className="text-white">{deviceRecord.claimedByAccount}</strong>)</span>
-                )}. New account trial bypass is restricted. You can subscribe directly below to reactivate PRO access.
-              </div>
-            </div>
-          )}
-
-          {/* Features Bullets */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            {[
-              'Complete US Gym Offline JSON Workouts',
-              'Auto-calculated TDEE & Macro Split',
-              'Web Audio Rest Timer Beep Synthesizer',
-              'Hydration (oz) & Step Counter Log',
-              '100% Client-Side LocalStorage Encryption',
-              'Cancel Anytime in 1-Click',
-            ].map((feat, i) => (
-              <div key={i} className="flex items-center gap-2 text-zinc-300">
-                <div className="w-5 h-5 rounded-full bg-lime-500/10 border border-lime-500/30 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3 text-lime-400" />
-                </div>
-                <span>{feat}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Tier Selection */}
-          <div className="space-y-3">
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider">
-              Select Your Access Tier
-            </label>
-
-            <div className="grid grid-cols-2 gap-3">
-              {/* Annual Plan */}
-              <div
-                onClick={() => setBillingCycle('annual')}
-                className={`p-4 rounded-2xl border cursor-pointer relative transition-all ${
-                  billingCycle === 'annual'
-                    ? 'bg-lime-500/10 border-lime-500 ring-1 ring-lime-500'
-                    : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
-                }`}
-              >
-                <div className="absolute -top-2.5 right-3 bg-lime-500 text-zinc-950 font-black text-[10px] uppercase px-2 py-0.5 rounded-full shadow">
-                  SAVE 66%
-                </div>
-                <div className="text-xs font-bold text-zinc-400 uppercase">Annual Pass</div>
-                <div className="text-2xl font-black text-white mt-1">
-                  ₹6,999<span className="text-xs text-zinc-400 font-normal">/yr</span>
-                </div>
-                <div className="text-[11px] text-lime-400 font-medium mt-1">Just ₹583/month</div>
-              </div>
-
-              {/* Monthly Plan */}
-              <div
-                onClick={() => setBillingCycle('monthly')}
-                className={`p-4 rounded-2xl border cursor-pointer relative transition-all ${
-                  billingCycle === 'monthly'
-                    ? 'bg-lime-500/10 border-lime-500 ring-1 ring-lime-500'
-                    : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
-                }`}
-              >
-                <div className="text-xs font-bold text-zinc-400 uppercase">Monthly Pass</div>
-                <div className="text-2xl font-black text-white mt-1">
-                  ₹1,699<span className="text-xs text-zinc-400 font-normal">/mo</span>
-                </div>
-                <div className="text-[11px] text-zinc-400 font-medium mt-1">Flexible billing</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Legal / Medical Disclaimer Checkbox */}
-          <div className="p-3.5 bg-zinc-950 border border-zinc-800/80 rounded-xl space-y-2">
-            <label className="flex items-start gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={disclaimerAccepted}
-                onChange={(e) => {
-                  setDisclaimerAccepted(e.target.checked);
-                  if (e.target.checked) setError('');
-                }}
-                className="mt-0.5 rounded accent-lime-500 w-4 h-4 cursor-pointer"
-              />
-              <span className="text-[11px] text-zinc-400 leading-tight">
-                <span className="font-semibold text-zinc-300">Required Medical Disclaimer:</span> This application provides educational fitness & sports science protocols and is not a substitute for professional medical advice. Always consult a physician before beginning any exercise routine.
-              </span>
-            </label>
-          </div>
-
-          {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-medium flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Call to Action Button */}
-          <div>
-            <button
-              type="button"
-              onClick={handleCheckout}
-              disabled={processing}
-              className="w-full py-4 px-6 bg-lime-500 hover:bg-lime-400 active:scale-[0.99] text-zinc-950 font-black text-base uppercase tracking-wider rounded-2xl shadow-xl shadow-lime-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-            >
-              {processing ? (
-                <span className="animate-pulse flex items-center gap-2">
-                  <Zap className="w-5 h-5 animate-bounce" /> Connecting Payment Gateway...
-                </span>
-              ) : (
-                <>
+                <button
+                  type="button"
+                  onClick={handleOpenGateway}
+                  className="w-full py-4 px-6 bg-lime-500 hover:bg-lime-400 active:scale-[0.99] text-zinc-950 font-black text-base uppercase tracking-wider rounded-2xl shadow-xl shadow-lime-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
                   <Lock className="w-4 h-4" />
                   <span>
                     {trialAlreadyClaimedOnDevice
                       ? `Subscribe Now (${billingCycle === 'annual' ? '₹6,999/yr' : '₹1,699/mo'})`
-                      : 'Start 7-Day Free Trial (Lemon Squeezy)'}
+                      : 'Proceed to Card Setup (Lemon Squeezy)'}
                   </span>
                   <ExternalLink className="w-4 h-4 ml-1" />
-                </>
-              )}
-            </button>
+                </button>
 
-            <p className="text-center text-[11px] text-zinc-500 mt-2">
-              Secured by Lemon Squeezy Gateway • Apple Pay, Cards & PayPal Accepted
-            </p>
-          </div>
+                <p className="text-center text-[11px] text-zinc-500 mt-2">
+                  Opens official Lemon Squeezy Gateway • Apple Pay, Cards & Autopay Required
+                </p>
+              </div>
+            </>
+          ) : (
+            /* Step 2: Payment Verification Screen */
+            <div className="space-y-5">
+              <div className="p-4 bg-zinc-950 border border-lime-500/30 rounded-2xl space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-lime-400 uppercase tracking-wider">
+                  <CheckCircle2 className="w-4 h-4 text-lime-400 animate-pulse" />
+                  <span>Step 1: Complete Card Setup on Lemon Squeezy</span>
+                </div>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  Lemon Squeezy payment page has been opened in a new tab. Please enter your card details and complete the subscription checkout.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => window.open(LEMON_SQUEEZY_LINKS[billingCycle], '_blank')}
+                  className="w-full py-2.5 px-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-lime-400" />
+                  <span>Re-open Lemon Squeezy Payment Gateway Tab</span>
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                  Step 2: Enter Lemon Squeezy Order # or Email (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. LS-123456 or your billing email"
+                  value={orderId}
+                  onChange={(e) => setOrderId(e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-lime-500"
+                />
+              </div>
+
+              <div className="pt-2 space-y-3">
+                <button
+                  type="button"
+                  onClick={handleVerifyPayment}
+                  disabled={processing}
+                  className="w-full py-4 px-6 bg-gradient-to-r from-lime-400 via-lime-500 to-emerald-400 hover:from-lime-300 hover:to-emerald-300 active:scale-[0.99] text-zinc-950 font-black text-base uppercase tracking-wider rounded-2xl shadow-xl shadow-lime-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {processing ? (
+                    <span className="animate-pulse flex items-center gap-2">
+                      <Zap className="w-5 h-5 animate-bounce" /> Verifying Payment Status...
+                    </span>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
+                      <span>✅ I've Completed Payment — Activate Pro</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStep('checkout')}
+                  className="w-full text-center text-xs text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
+                >
+                  Back to Plan Selection
+                </button>
+              </div>
+            </div>
+          )}
 
           {onClose && (
-            <div className="text-center pt-2">
+            <div className="text-center pt-2 border-t border-zinc-800/80">
               <button
                 type="button"
                 onClick={onClose}
