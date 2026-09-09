@@ -144,8 +144,8 @@ export function App() {
   };
 
   // Sync state on subscription change
-  const handleSubscriptionSuccess = (newSub: SubscriptionState) => {
-    setSubscription(newSub);
+  const handleSubscriptionSuccess = (newSub?: SubscriptionState) => {
+    if (newSub) setSubscription(newSub);
     setShowPaywall(false);
   };
 

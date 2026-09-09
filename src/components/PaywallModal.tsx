@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { ShieldAlert, Check, Lock, Sparkles, AlertTriangle, ExternalLink, RefreshCw, Loader2, ShieldCheck } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import {
-  saveSubscription,
   isDeviceTrialAlreadyClaimed,
   getDeviceTrialRecord,
-  markDeviceTrialClaimed,
-  getUserSession,
 } from '../services/storage';
 import type { SubscriptionState } from '../types';
 
 interface PaywallModalProps {
-  onSuccess: (sub: SubscriptionState) => void;
+  onSuccess?: (sub?: SubscriptionState) => void;
   onClose?: () => void;
   isModal?: boolean;
 }
@@ -22,15 +18,12 @@ const LEMON_SQUEEZY_LINKS = {
   monthly: 'https://aurafit-app.lemonsqueezy.com/checkout/buy/56003e82-c2cc-41f1-a095-2454ca6a9fbe',
 };
 
-export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, isModal = true }) => {
+export const PaywallModal: React.FC<PaywallModalProps> = ({ onClose, isModal = true }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [disclaimerAccepted, setDisclaimerAccepted] = useState<boolean>(false);
   const [step, setStep] = useState<'checkout' | 'verifying'>('checkout');
-  const [orderId, setOrderId] = useState<string>('');
-  const [processing, setProcessing] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  const currentSession = getUserSession();
   const trialAlreadyClaimedOnDevice = isDeviceTrialAlreadyClaimed();
   const deviceRecord = getDeviceTrialRecord();
 
@@ -47,56 +40,8 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, 
     // Open real Lemon Squeezy checkout page in new tab/window
     window.open(checkoutUrl, '_blank');
     
-    // Switch to verification step requiring real payment redirect or order #
+    // Switch to verification step requiring real payment auto-redirect
     setStep('verifying');
-  };
-
-  // Verify manual Order ID if provided by user from Lemon Squeezy receipt
-  const handleVerifyOrderId = () => {
-    if (!orderId.trim()) {
-      setError('Please enter your Lemon Squeezy Order # or Receipt Email to verify.');
-      return;
-    }
-
-    setError('');
-    setProcessing(true);
-
-    let isTrial = false;
-    if (!trialAlreadyClaimedOnDevice) {
-      isTrial = true;
-      markDeviceTrialClaimed(currentSession?.name || 'Unknown Athlete');
-    }
-
-    const trialEndDate = new Date();
-    if (isTrial) {
-      trialEndDate.setDate(trialEndDate.getDate() + 7);
-    }
-
-    const newSub: SubscriptionState = {
-      plan: 'pro',
-      status: 'active',
-      billingCycle,
-      trialEnd: isTrial ? trialEndDate.toISOString() : null,
-      isSubscribed: true,
-    };
-
-    saveSubscription(newSub);
-
-    // Trigger celebration confetti
-    try {
-      confetti({
-        particleCount: 100,
-        spread: 80,
-        origin: { y: 0.6 },
-      });
-    } catch (e) {
-      console.log(e);
-    }
-
-    setTimeout(() => {
-      setProcessing(false);
-      onSuccess(newSub);
-    }, 600);
   };
 
   const containerClasses = isModal
@@ -254,13 +199,13 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, 
               </div>
             </>
           ) : (
-            /* Step 2: Payment Verification Screen */
+            /* Step 2: Payment Verification Screen (100% Auto-Redirect Verification Only) */
             <div className="space-y-5">
               
               {/* Waiting Status Animation */}
-              <div className="p-4 sm:p-5 bg-gradient-to-r from-lime-500/10 via-emerald-500/10 to-cyan-500/10 border border-lime-500/30 rounded-2xl space-y-3 text-center">
+              <div className="p-5 bg-gradient-to-r from-lime-500/10 via-emerald-500/10 to-cyan-500/10 border border-lime-500/30 rounded-2xl space-y-4 text-center">
                 <div className="flex items-center justify-center gap-2 text-xs font-black text-lime-400 uppercase tracking-wider">
-                  <Loader2 className="w-4 h-4 text-lime-400 animate-spin" />
+                  <Loader2 className="w-5 h-5 text-lime-400 animate-spin" />
                   <span>Awaiting Lemon Squeezy Checkout Completion...</span>
                 </div>
 
@@ -268,9 +213,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, 
                   Lemon Squeezy payment page has opened in a new tab. Please enter your Card details and complete the 7-day trial registration.
                 </p>
 
-                <div className="p-3 bg-zinc-950/80 rounded-xl border border-zinc-800 text-[11px] text-zinc-400 text-left space-y-1">
+                <div className="p-3.5 bg-zinc-950/90 rounded-xl border border-zinc-800 text-[11px] text-zinc-400 text-left space-y-1.5">
                   <div className="font-semibold text-lime-400 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Auto-Redirect Verification Active
+                    <ShieldCheck className="w-4 h-4" /> Auto-Redirect Verification Active
                   </div>
                   <p>
                     Upon completing checkout on Lemon Squeezy, you will be automatically redirected back here to instantly activate Pro access.
@@ -285,33 +230,6 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onSuccess, onClose, 
                   <RefreshCw className="w-4 h-4 text-lime-400" />
                   <span>Re-open Lemon Squeezy Gateway Tab</span>
                 </button>
-              </div>
-
-              {/* Optional Manual Receipt/Order # Verification */}
-              <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-2xl space-y-3">
-                <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                  Or Enter Lemon Squeezy Order # / Email
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="e.g. LS-123456 or receipt email"
-                    value={orderId}
-                    onChange={(e) => {
-                      setOrderId(e.target.value);
-                      if (e.target.value) setError('');
-                    }}
-                    className="flex-1 px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-lime-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleVerifyOrderId}
-                    disabled={processing}
-                    className="py-2.5 px-4 bg-lime-500 hover:bg-lime-400 text-zinc-950 font-bold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-50 cursor-pointer shrink-0"
-                  >
-                    {processing ? 'Verifying...' : 'Verify'}
-                  </button>
-                </div>
               </div>
 
               {error && (
