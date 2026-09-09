@@ -129,9 +129,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onClose, isModal = t
                     </div>
                     <div className="text-xs font-bold text-zinc-400 uppercase">Annual Pass</div>
                     <div className="text-2xl font-black text-white mt-1">
-                      ₹6,999<span className="text-xs text-zinc-400 font-normal">/yr</span>
+                      $79.99<span className="text-xs text-zinc-400 font-normal">/yr</span>
                     </div>
-                    <div className="text-[11px] text-lime-400 font-medium mt-1">Just ₹583/month</div>
+                    <div className="text-[11px] text-lime-400 font-medium mt-1">Just $6.66/month</div>
                   </div>
 
                   {/* Monthly Plan */}
@@ -145,7 +145,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onClose, isModal = t
                   >
                     <div className="text-xs font-bold text-zinc-400 uppercase">Monthly Pass</div>
                     <div className="text-2xl font-black text-white mt-1">
-                      ₹1,699<span className="text-xs text-zinc-400 font-normal">/mo</span>
+                      $19.99<span className="text-xs text-zinc-400 font-normal">/mo</span>
                     </div>
                     <div className="text-[11px] text-zinc-400 font-medium mt-1">Flexible billing</div>
                   </div>
@@ -187,7 +187,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onClose, isModal = t
                   <Lock className="w-4 h-4" />
                   <span>
                     {trialAlreadyClaimedOnDevice
-                      ? `Subscribe Now (${billingCycle === 'annual' ? '₹6,999/yr' : '₹1,699/mo'})`
+                      ? `Subscribe Now (${billingCycle === 'annual' ? '$79.99/yr' : '$19.99/mo'})`
                       : 'Proceed to Card Setup (Lemon Squeezy)'}
                   </span>
                   <ExternalLink className="w-4 h-4 ml-1" />
