@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, User, ArrowRight, CheckCircle2, LockKeyhole, WifiOff } from 'lucide-react';
+import { ShieldCheck, Lock, User, ArrowRight, CheckCircle2, LockKeyhole, WifiOff, Download, Smartphone } from 'lucide-react';
 import { hashPasscode } from '../utils/calc';
 import { getUserSession, saveUserSession } from '../services/storage';
 
 interface AuthModalProps {
   onSuccess: () => void;
+  onOpenInstallModal?: () => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onOpenInstallModal }) => {
   const existingSession = getUserSession();
   const [isLoginMode, setIsLoginMode] = useState<boolean>(!!existingSession);
   const [name, setName] = useState<string>(existingSession?.name || '');
@@ -68,6 +69,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto">
       <div className="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
         
+        {/* TOP BIG PROMINENT INSTALL APP BUTTON */}
+        {onOpenInstallModal && (
+          <div className="p-4 sm:p-5 bg-gradient-to-r from-lime-500/25 via-emerald-500/25 to-cyan-500/25 border-b border-lime-500/40 text-center">
+            <button
+              type="button"
+              onClick={onOpenInstallModal}
+              className="w-full py-4 px-4 bg-gradient-to-r from-lime-400 via-lime-500 to-emerald-400 hover:from-lime-300 hover:to-emerald-300 active:scale-[0.98] text-zinc-950 font-black text-base uppercase tracking-wide rounded-2xl shadow-xl shadow-lime-500/30 flex items-center justify-center gap-2.5 transition-all transform hover:scale-[1.01] cursor-pointer"
+            >
+              <Download className="w-6 h-6 stroke-[3] animate-bounce" />
+              <span>📲 INSTALL AURA FIT APP (iOS & ANDROID)</span>
+            </button>
+            <div className="text-[11px] font-bold text-lime-400 mt-2 flex items-center justify-center gap-2 flex-wrap">
+              <span className="flex items-center gap-1"><Smartphone className="w-3.5 h-3.5" /> Direct Mobile Install</span>
+              <span>•</span>
+              <span>⚡ 100% Free</span>
+              <span>•</span>
+              <span>🔒 Zero Cloud Leaks</span>
+            </div>
+          </div>
+        )}
+
         {/* Top High-Trust Security Guarantee Banner */}
         <div className="bg-gradient-to-r from-lime-500/20 via-emerald-500/20 to-cyan-500/20 border-b border-lime-500/30 p-4 sm:p-5">
           <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-lime-400 mb-2">

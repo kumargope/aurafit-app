@@ -189,7 +189,12 @@ export function App() {
       </main>
 
       {/* Modals & Overlays */}
-      {showAuthModal && <AuthModal onSuccess={handleAuthSuccess} />}
+      {showAuthModal && (
+        <AuthModal
+          onSuccess={handleAuthSuccess}
+          onOpenInstallModal={() => setShowInstallModal(true)}
+        />
+      )}
 
       {showOnboarding && session && (
         <OnboardingWizard
