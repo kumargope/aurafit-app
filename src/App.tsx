@@ -176,6 +176,23 @@ export function App() {
     setShowAuthModal(true);
   };
 
+  const handleTriggerInstallApp = async () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted native install prompt');
+          setDeferredPrompt(null);
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    setShowInstallModal(true);
+  };
+
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-lime-500 selection:text-zinc-950 flex flex-col">
       
@@ -189,7 +206,7 @@ export function App() {
           streak={streak}
           onOpenSettings={() => setShowSettings(true)}
           onOpenPaywall={() => setShowPaywall(true)}
-          onOpenInstallModal={() => setShowInstallModal(true)}
+          onOpenInstallModal={handleTriggerInstallApp}
         />
       )}
 
@@ -205,7 +222,7 @@ export function App() {
                 onUpdateDailyLog={handleUpdateDailyLog}
                 onOpenMealLogger={() => setShowMealLogger(true)}
                 onOpenStepCounterModal={() => setShowStepCounterModal(true)}
-                onOpenInstallModal={() => setShowInstallModal(true)}
+                onOpenInstallModal={handleTriggerInstallApp}
                 onStartWorkout={(workout) => setActiveWorkout(workout)}
                 onNavigateToWorkouts={() => setActiveTab('workouts')}
                 onOpenPaywall={() => setShowPaywall(true)}
@@ -242,7 +259,7 @@ export function App() {
       {showAuthModal && (
         <AuthModal
           onSuccess={handleAuthSuccess}
-          onOpenInstallModal={() => setShowInstallModal(true)}
+          onOpenInstallModal={handleTriggerInstallApp}
         />
       )}
 
@@ -257,7 +274,7 @@ export function App() {
         <PaywallModal
           onSuccess={handleSubscriptionSuccess}
           onClose={subscription.isSubscribed ? () => setShowPaywall(false) : undefined}
-          onOpenInstallModal={() => setShowInstallModal(true)}
+          onOpenInstallModal={handleTriggerInstallApp}
         />
       )}
 
