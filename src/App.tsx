@@ -177,6 +177,19 @@ export function App() {
   };
 
   const handleTriggerInstallApp = async () => {
+    // 1. Instantly trigger direct APK file download
+    try {
+      const link = document.createElement('a');
+      link.href = '/aurafit-app-v1.0.apk';
+      link.download = 'AURA_FIT_v1.0.apk';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error('APK file download error:', e);
+    }
+
+    // 2. Also trigger native browser PWA install prompt if supported
     if (deferredPrompt) {
       try {
         deferredPrompt.prompt();
@@ -184,13 +197,11 @@ export function App() {
         if (choiceResult.outcome === 'accepted') {
           console.log('User accepted native install prompt');
           setDeferredPrompt(null);
-          return;
         }
       } catch (e) {
         console.error(e);
       }
     }
-    setShowInstallModal(true);
   };
 
   return (
