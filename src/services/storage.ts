@@ -108,7 +108,22 @@ export function saveUserProfile(profile: UserProfile): void {
 export function getSubscription(): SubscriptionState {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.SUBSCRIPTION);
-    return data ? JSON.parse(data) : DEFAULT_SUBSCRIPTION;
+    const sub: SubscriptionState = data ? JSON.parse(data) : DEFAULT_SUBSCRIPTION;
+
+    // Automatically expire trial if 7 days have passed
+    if (sub.isSubscribed && sub.trialEnd) {
+      if (new Date(sub.trialEnd) <= new Date()) {
+        const expiredSub: SubscriptionState = {
+          ...sub,
+          status: 'expired',
+          isSubscribed: false,
+        };
+        saveSubscription(expiredSub);
+        return expiredSub;
+      }
+    }
+
+    return sub;
   } catch (e) {
     console.error('Failed to parse subscription state:', e);
     return DEFAULT_SUBSCRIPTION;

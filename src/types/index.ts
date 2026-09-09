@@ -33,7 +33,7 @@ export interface UserProfile {
 
 export interface SubscriptionState {
   plan: 'free' | 'pro';
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'expired';
   billingCycle: 'monthly' | 'annual';
   trialEnd: string | null; // ISO string
   isSubscribed: boolean;

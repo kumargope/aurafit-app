@@ -110,7 +110,7 @@ export function App() {
   const [showOnboarding, setShowOnboarding] = useState<boolean>(
     !!getUserSession() && (!getUserProfile() || !getUserProfile()?.onboardingCompleted)
   );
-  const [showPaywall, setShowPaywall] = useState<boolean>(false);
+  const [showPaywall, setShowPaywall] = useState<boolean>(() => !getSubscription().isSubscribed);
   const [showMealLogger, setShowMealLogger] = useState<boolean>(false);
   const [showStepCounterModal, setShowStepCounterModal] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -256,7 +256,7 @@ export function App() {
       {showPaywall && (
         <PaywallModal
           onSuccess={handleSubscriptionSuccess}
-          onClose={() => setShowPaywall(false)}
+          onClose={subscription.isSubscribed ? () => setShowPaywall(false) : undefined}
         />
       )}
 
