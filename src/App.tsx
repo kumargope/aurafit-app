@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   getUserSession,
   getUserProfile,
@@ -27,6 +27,7 @@ import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
 import { MealLoggerModal } from './components/MealLoggerModal';
 import { SettingsModal } from './components/SettingsModal';
 import { StepCounterModal } from './components/StepCounterModal';
+import { InstallAppModal } from './components/InstallAppModal';
 
 export function App() {
   const [session, setSession] = useState<UserSession | null>(() => getUserSession());
@@ -35,6 +36,23 @@ export function App() {
   const [workoutLogs, setWorkoutLogs] = useState<CompletedWorkoutLog[]>(() => getWorkoutLogs());
   const [todayLog, setTodayLog] = useState<DailyLog>(() => getTodayLog(getUserProfile()));
   const [streak, setStreak] = useState<number>(() => calculateStreak());
+
+  // PWA Install Prompt Listener
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallModal, setShowInstallModal] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
 
   // UI Navigation & Modals
   const [activeTab, setActiveTab] = useState<'dashboard' | 'workouts' | 'analytics'>('dashboard');
@@ -121,6 +139,7 @@ export function App() {
           streak={streak}
           onOpenSettings={() => setShowSettings(true)}
           onOpenPaywall={() => setShowPaywall(true)}
+          onOpenInstallModal={() => setShowInstallModal(true)}
         />
       )}
 
@@ -136,6 +155,7 @@ export function App() {
                 onUpdateDailyLog={handleUpdateDailyLog}
                 onOpenMealLogger={() => setShowMealLogger(true)}
                 onOpenStepCounterModal={() => setShowStepCounterModal(true)}
+                onOpenInstallModal={() => setShowInstallModal(true)}
                 onStartWorkout={(workout) => setActiveWorkout(workout)}
                 onNavigateToWorkouts={() => setActiveTab('workouts')}
                 onOpenPaywall={() => setShowPaywall(true)}
@@ -207,6 +227,13 @@ export function App() {
           dailyLog={todayLog}
           onClose={() => setShowStepCounterModal(false)}
           onUpdateDailyLog={handleUpdateDailyLog}
+        />
+      )}
+
+      {showInstallModal && (
+        <InstallAppModal
+          onClose={() => setShowInstallModal(false)}
+          deferredPrompt={deferredPrompt}
         />
       )}
 

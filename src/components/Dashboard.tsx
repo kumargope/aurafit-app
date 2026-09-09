@@ -2,7 +2,7 @@ import React from 'react';
 import type { UserProfile, DailyLog, CompletedWorkoutLog, WorkoutTemplate } from '../types';
 import { MacroCards } from './MacroCards';
 import { HydrationStepTracker } from './HydrationStepTracker';
-import { Dumbbell, Play, Sparkles, ChevronRight } from 'lucide-react';
+import { Dumbbell, Play, Sparkles, ChevronRight, Download } from 'lucide-react';
 import { DEFAULT_WORKOUTS } from '../data/defaultData';
 
 interface DashboardProps {
@@ -12,6 +12,7 @@ interface DashboardProps {
   onUpdateDailyLog: (updated: DailyLog) => void;
   onOpenMealLogger: () => void;
   onOpenStepCounterModal?: () => void;
+  onOpenInstallModal?: () => void;
   onStartWorkout: (workout: WorkoutTemplate) => void;
   onNavigateToWorkouts: () => void;
   onOpenPaywall: () => void;
@@ -24,6 +25,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onUpdateDailyLog,
   onOpenMealLogger,
   onOpenStepCounterModal,
+  onOpenInstallModal,
   onStartWorkout,
   onNavigateToWorkouts,
 }) => {
@@ -33,9 +35,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Welcome Athlete Hero Header */}
       <div className="p-6 sm:p-8 bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-950 border border-zinc-800 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-lime-500/10 border border-lime-500/30 text-lime-400 text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5" /> 12-Week Protocol Active
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-lime-500/10 border border-lime-500/30 text-lime-400 text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5" /> 12-Week Protocol Active
+            </div>
+
+            {onOpenInstallModal && (
+              <button
+                type="button"
+                onClick={onOpenInstallModal}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs font-bold transition-all cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" /> Install App (iOS & Android)
+              </button>
+            )}
           </div>
+
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             Welcome Back, {profile.name}!
           </h1>
@@ -44,15 +59,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </p>
         </div>
 
-        {/* Quick Workout Button */}
-        <div className="shrink-0 flex items-center gap-3">
+        {/* Quick Actions Buttons */}
+        <div className="shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {onOpenInstallModal && (
+            <button
+              type="button"
+              onClick={onOpenInstallModal}
+              className="py-3.5 px-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl border border-zinc-700 flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <Download className="w-4 h-4 text-lime-400" />
+              <span>Install Mobile App</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => onStartWorkout(DEFAULT_WORKOUTS[0])}
             className="py-3.5 px-5 bg-lime-500 hover:bg-lime-400 active:scale-95 text-zinc-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-lime-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <Play className="w-4 h-4 fill-zinc-950" />
-            <span>Quick Start Chest & Tri Protocol</span>
+            <span>Start Chest & Tri Split</span>
           </button>
         </div>
       </div>

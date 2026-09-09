@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flame, Dumbbell, LayoutDashboard, BarChart3, Settings, Sparkles, ShieldCheck } from 'lucide-react';
+import { Flame, Dumbbell, LayoutDashboard, BarChart3, Settings, Sparkles, ShieldCheck, Download } from 'lucide-react';
 import type { UserProfile, SubscriptionState } from '../types';
 
 interface NavbarProps {
@@ -10,6 +10,7 @@ interface NavbarProps {
   streak: number;
   onOpenSettings: () => void;
   onOpenPaywall: () => void;
+  onOpenInstallModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -19,6 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   streak,
   onOpenSettings,
   onOpenPaywall,
+  onOpenInstallModal,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
@@ -71,9 +73,22 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
         </div>
 
-        {/* Right: Badges & Profile Settings */}
-        <div className="flex items-center gap-3">
+        {/* Right: Badges, Install App & Profile Settings */}
+        <div className="flex items-center gap-2.5">
           
+          {/* Download & Install App Button */}
+          {onOpenInstallModal && (
+            <button
+              type="button"
+              onClick={onOpenInstallModal}
+              className="py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 border border-lime-500/30 text-lime-400 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              title="Download & Install App (iOS & Android)"
+            >
+              <Download className="w-3.5 h-3.5 animate-bounce" />
+              <span className="hidden sm:inline">Install App</span>
+            </button>
+          )}
+
           {/* Streak Counter */}
           <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-400">
             <Flame className="w-4 h-4 fill-amber-400/30 text-amber-400 animate-pulse" />
