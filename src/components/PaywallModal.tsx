@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldAlert, Check, Lock, Sparkles, AlertTriangle, ExternalLink, RefreshCw, Loader2, ShieldCheck } from 'lucide-react';
+import { ShieldAlert, Check, Lock, Sparkles, AlertTriangle, ExternalLink, RefreshCw, Loader2, ShieldCheck, Download, Smartphone } from 'lucide-react';
 import {
   isDeviceTrialAlreadyClaimed,
   getDeviceTrialRecord,
@@ -9,6 +9,7 @@ import type { SubscriptionState } from '../types';
 interface PaywallModalProps {
   onSuccess?: (sub?: SubscriptionState) => void;
   onClose?: () => void;
+  onOpenInstallModal?: () => void;
   isModal?: boolean;
 }
 
@@ -18,7 +19,7 @@ const LEMON_SQUEEZY_LINKS = {
   monthly: 'https://aurafit-app.lemonsqueezy.com/checkout/buy/56003e82-c2cc-41f1-a095-2454ca6a9fbe',
 };
 
-export const PaywallModal: React.FC<PaywallModalProps> = ({ onClose, isModal = true }) => {
+export const PaywallModal: React.FC<PaywallModalProps> = ({ onClose, onOpenInstallModal, isModal = true }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [disclaimerAccepted, setDisclaimerAccepted] = useState<boolean>(false);
   const [step, setStep] = useState<'checkout' | 'verifying'>('checkout');
@@ -50,8 +51,70 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ onClose, isModal = t
 
   return (
     <div className={containerClasses}>
+      
+      {/* Side Popups / Banners for Desktop View (Left & Right Sides) */}
+      {onOpenInstallModal && (
+        <>
+          {/* Left Side Floating Popup */}
+          <div className="hidden lg:flex fixed left-6 top-1/2 -translate-y-1/2 z-50 w-64 bg-zinc-900 border-2 border-lime-500/50 rounded-3xl p-5 shadow-2xl shadow-lime-500/20 flex-col items-center text-center animate-bounce duration-1000">
+            <div className="w-12 h-12 rounded-2xl bg-lime-500/20 border border-lime-500/40 flex items-center justify-center mb-3">
+              <Download className="w-6 h-6 text-lime-400" />
+            </div>
+            <h3 className="text-sm font-black uppercase text-white tracking-wide">
+              📲 Install AURA FIT App
+            </h3>
+            <p className="text-[11px] text-zinc-400 mt-1 mb-4 leading-tight">
+              Get the native mobile app on iOS & Android for 100% offline gym use!
+            </p>
+            <button
+              type="button"
+              onClick={onOpenInstallModal}
+              className="w-full py-3 px-4 bg-gradient-to-r from-lime-400 to-emerald-400 hover:from-lime-300 hover:to-emerald-300 text-zinc-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-lime-500/30 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-105"
+            >
+              <Download className="w-4 h-4 stroke-[3]" />
+              <span>DOWNLOAD NOW</span>
+            </button>
+          </div>
+
+          {/* Right Side Floating Popup */}
+          <div className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 w-64 bg-zinc-900 border-2 border-cyan-500/50 rounded-3xl p-5 shadow-2xl shadow-cyan-500/20 flex-col items-center text-center animate-bounce duration-1000">
+            <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center mb-3">
+              <Smartphone className="w-6 h-6 text-cyan-400" />
+            </div>
+            <h3 className="text-sm font-black uppercase text-white tracking-wide">
+              ⚡ Direct Mobile APK
+            </h3>
+            <p className="text-[11px] text-zinc-400 mt-1 mb-4 leading-tight">
+              1-Click Home Screen Install. Zero App Store search required.
+            </p>
+            <button
+              type="button"
+              onClick={onOpenInstallModal}
+              className="w-full py-3 px-4 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-zinc-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-105"
+            >
+              <Smartphone className="w-4 h-4 stroke-[3]" />
+              <span>GET MOBILE APP</span>
+            </button>
+          </div>
+        </>
+      )}
+
       <div className="w-full max-w-xl bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
         
+        {/* Top Big Download App Banner */}
+        {onOpenInstallModal && (
+          <div className="p-3.5 bg-gradient-to-r from-lime-500/25 via-emerald-500/25 to-cyan-500/25 border-b border-lime-500/40 text-center">
+            <button
+              type="button"
+              onClick={onOpenInstallModal}
+              className="w-full py-3 px-4 bg-gradient-to-r from-lime-400 via-lime-500 to-emerald-400 hover:from-lime-300 hover:to-emerald-300 active:scale-[0.98] text-zinc-950 font-black text-sm uppercase tracking-wide rounded-2xl shadow-xl shadow-lime-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <Download className="w-5 h-5 stroke-[3] animate-bounce" />
+              <span>📲 DOWNLOAD & INSTALL AURA FIT APP (iOS & ANDROID)</span>
+            </button>
+          </div>
+        )}
+
         {/* Banner Header */}
         <div className="bg-gradient-to-r from-lime-500 via-emerald-500 to-cyan-500 p-6 sm:p-8 text-zinc-950 relative overflow-hidden">
           <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none" />

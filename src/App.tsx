@@ -257,6 +257,7 @@ export function App() {
         <PaywallModal
           onSuccess={handleSubscriptionSuccess}
           onClose={subscription.isSubscribed ? () => setShowPaywall(false) : undefined}
+          onOpenInstallModal={() => setShowInstallModal(true)}
         />
       )}
 
