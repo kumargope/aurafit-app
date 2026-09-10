@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aurafit-app-nine.vercel.app/sitemap.xml
